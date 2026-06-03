@@ -219,12 +219,12 @@ def icon(name: str, color: str = TEXT_MUT, size: int = 18) -> str:
 # ── Reusable components ────────────────────────────────────────────────────────
 
 def section_label(title: str, icon_name: str = "activity"):
-    st.markdown(f"""
+    st.html(f"""
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;">
         {icon(icon_name, ACCENT, 15)}
         <span style="font-size:0.72rem;font-weight:600;letter-spacing:0.09em;
                      text-transform:uppercase;color:{TEXT_MUT};">{title}</span>
-    </div>""", unsafe_allow_html=True)
+    </div>""")
 
 
 def stat_card(icon_name: str, value: str, label: str,
@@ -257,19 +257,18 @@ def stat_card(icon_name: str, value: str, label: str,
 
 
 def divider():
-    st.markdown(
+    st.html(
         f'<div style="border-top:1px solid {BORDER};margin:1.75rem 0;"></div>',
-        unsafe_allow_html=True,
     )
 
 
 def sidebar_row(label: str, value: str):
-    st.markdown(f"""
+    st.html(f"""
     <div style="display:flex;justify-content:space-between;align-items:center;
                 padding:0.45rem 0;border-bottom:1px solid {BORDER};">
         <span style="font-size:0.78rem;color:{TEXT_MUT};">{label}</span>
         <span style="font-size:0.78rem;font-weight:600;color:{TEXT_PRI};">{value}</span>
-    </div>""", unsafe_allow_html=True)
+    </div>""")
 
 
 def hex_rgba(hex_color: str, alpha: float) -> str:
@@ -339,7 +338,7 @@ shap_df     = load_shap_values()
 # ── Sidebar ────────────────────────────────────────────────────────────────────
 
 with st.sidebar:
-    st.markdown(f"""
+    st.html(f"""
     <div style="margin-bottom:2rem;">
         <div style="font-size:1rem;font-weight:700;color:{TEXT_PRI};letter-spacing:-0.01em;">
             Earnings Sentiment
@@ -347,14 +346,14 @@ with st.sidebar:
         <div style="font-size:0.73rem;color:{TEXT_DIM};margin-top:3px;">
             NLP + price analytics
         </div>
-    </div>""", unsafe_allow_html=True)
+    </div>""")
 
-    st.markdown(f"""
+    st.html(f"""
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:0.5rem;">
         {icon("search", TEXT_DIM, 12)}
         <span style="font-size:0.68rem;font-weight:600;letter-spacing:0.1em;
                      text-transform:uppercase;color:{TEXT_DIM};">Selection</span>
-    </div>""", unsafe_allow_html=True)
+    </div>""")
 
     available_tickers = (
         sorted(df_features["ticker"].unique().tolist()) if not df_features.empty else []
@@ -377,20 +376,19 @@ with st.sidebar:
         label_visibility="collapsed",
     )
 
-    st.markdown("<div style='height:0.75rem'></div>", unsafe_allow_html=True)
+    st.html(\1)
     st.button("Analyze")
 
-    st.markdown(
+    st.html(
         f'<div style="border-top:1px solid {BORDER};margin:1.5rem 0;"></div>',
-        unsafe_allow_html=True,
     )
 
-    st.markdown(f"""
+    st.html(f"""
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:0.75rem;">
         {icon("sliders", TEXT_DIM, 12)}
         <span style="font-size:0.68rem;font-weight:600;letter-spacing:0.1em;
                      text-transform:uppercase;color:{TEXT_DIM};">Model Performance</span>
-    </div>""", unsafe_allow_html=True)
+    </div>""")
 
     if report:
         sidebar_row("AUC-ROC",    str(report.get("auc_roc", "—")))
@@ -399,14 +397,13 @@ with st.sidebar:
         sidebar_row("Top Feature",str(report.get("top_feature", "—"))[:22])
         sidebar_row("Samples",    str(report.get("n_samples", "—")))
     else:
-        st.markdown(
+        st.html(
             f'<p style="font-size:0.78rem;color:{TEXT_DIM};">Run train.py to populate.</p>',
-            unsafe_allow_html=True,
         )
 
 # ── Header ─────────────────────────────────────────────────────────────────────
 
-st.markdown(f"""
+st.html(f"""
 <div style="padding:0.25rem 0 1.25rem;">
     <h1 style="margin:0;font-size:1.7rem;font-weight:700;color:{TEXT_PRI};
                letter-spacing:-0.03em;line-height:1.2;">
@@ -418,16 +415,16 @@ st.markdown(f"""
     </p>
 </div>
 <div style="border-top:1px solid {BORDER};margin-bottom:1.75rem;"></div>
-""", unsafe_allow_html=True)
+""")
 
 # ── No data guard ──────────────────────────────────────────────────────────────
 
 if df_features.empty:
-    st.markdown(f"""
+    st.html(f"""
     <div style="background:{SURFACE};border:1px solid {BORDER};border-radius:10px;
                 padding:2rem;text-align:center;color:{TEXT_MUT};font-size:0.875rem;">
         No processed data found. Run the pipeline first.
-    </div>""", unsafe_allow_html=True)
+    </div>""")
     st.code(
         "python src/ingestion/edgar_fetcher.py --tickers AAPL MSFT --years 2023 2024\n"
         "python src/processing/sentiment_pipeline.py\n"
@@ -440,9 +437,8 @@ row_df = df_features[
     (df_features["ticker"] == ticker) & (df_features["event_date"] == event_date)
 ]
 if row_df.empty:
-    st.markdown(
+    st.html(
         f'<div style="color:{NEG};font-size:0.875rem;">No data for {ticker} on {event_date}.</div>',
-        unsafe_allow_html=True,
     )
     st.stop()
 row = row_df.iloc[0]
@@ -477,31 +473,31 @@ tone_sh  = safe_float(row.get("tone_shift"))
 c1, c2, c3, c4 = st.columns(4, gap="small")
 
 with c1:
-    st.markdown(stat_card(
+    st.html(stat_card(
         "activity", f"{overall:+.3f}", "Overall Sentiment",
         value_color=sentiment_color(overall),
-    ), unsafe_allow_html=True)
+    ))
 with c2:
-    st.markdown(stat_card(
+    st.html(stat_card(
         "user", f"{ceo_sent:+.3f}", "CEO Tone",
         value_color=sentiment_color(ceo_sent),
-    ), unsafe_allow_html=True)
+    ))
 with c3:
-    st.markdown(stat_card(
+    st.html(stat_card(
         "message", f"{tone_sh:+.3f}", "Q&A Sentiment Shift",
         value_color=sentiment_color(tone_sh),
-    ), unsafe_allow_html=True)
+    ))
 with c4:
     if model_conf is not None:
         conf_color   = POS if pred_label == 1 else NEG
         badge_label  = "UP" if pred_label == 1 else "DOWN"
-        st.markdown(stat_card(
+        st.html(stat_card(
             "cpu", f"{model_conf:.1%}", "Model Confidence",
             value_color=conf_color,
             badge_text=badge_label, badge_color=conf_color,
-        ), unsafe_allow_html=True)
+        ))
     else:
-        st.markdown(stat_card("cpu", "—", "Model Confidence"), unsafe_allow_html=True)
+        st.html(\1)
 
 divider()
 
@@ -629,9 +625,8 @@ if not price_df.empty:
     fig_price.update_layout(**price_layout)
     st.plotly_chart(fig_price, use_container_width=True, config={"displayModeBar": False})
 else:
-    st.markdown(
+    st.html(
         f'<p style="color:{TEXT_DIM};font-size:0.875rem;">Price data not available.</p>',
-        unsafe_allow_html=True,
     )
 
 divider()
@@ -667,9 +662,8 @@ with col_shap:
         )
         st.plotly_chart(fig_shap, use_container_width=True, config={"displayModeBar": False})
     else:
-        st.markdown(
+        st.html(
             f'<p style="color:{TEXT_DIM};font-size:0.875rem;">Run train.py to generate SHAP values.</p>',
-            unsafe_allow_html=True,
         )
 
 with col_pred:
@@ -700,7 +694,7 @@ with col_pred:
                 </span>
             </div>"""
 
-        st.markdown(f"""
+        st.html(f"""
         <div style="padding:0.25rem 0;">
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.4rem;">
                 <div style="width:50px;height:50px;background:{hex_rgba(pred_color, 0.09)};border-radius:11px;
@@ -735,9 +729,8 @@ with col_pred:
                 {driver_text}
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """)
     else:
-        st.markdown(
+        st.html(
             f'<p style="color:{TEXT_DIM};font-size:0.875rem;">Run train.py to generate predictions.</p>',
-            unsafe_allow_html=True,
         )
