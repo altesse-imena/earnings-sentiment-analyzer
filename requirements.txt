@@ -31,3 +31,7 @@ python-dotenv==1.0.1
 loguru==0.7.2
 tqdm==4.66.2
 joblib==1.4.0
+
+# Testing
+pytest==8.2.0
+pytest-mock==3.14.0
