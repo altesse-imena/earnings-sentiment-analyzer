@@ -48,7 +48,7 @@ WHITE      = "#FFFFFF"
 
 # ── CSS ────────────────────────────────────────────────────────────────────────
 
-st.markdown(f"""
+st.html(f"""
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -157,7 +157,7 @@ hr {{
     padding: 0 !important;
 }}
 </style>
-""", unsafe_allow_html=True)
+""")
 
 # ── Plotly base configs ────────────────────────────────────────────────────────
 # Kept separate to avoid duplicate-key errors when overriding xaxis/yaxis per chart.
