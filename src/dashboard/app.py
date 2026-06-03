@@ -565,15 +565,20 @@ if not price_df.empty:
     event_ts = pd.Timestamp(event_date)
     fig_price = go.Figure()
 
+    x_dates  = [d.strftime("%Y-%m-%d") for d in price_df.index]
+    x_min    = price_df.index.min().strftime("%Y-%m-%d")
+    x_max    = price_df.index.max().strftime("%Y-%m-%d")
+    vline_x  = pd.Timestamp(event_date).strftime("%Y-%m-%d")
+
     fig_price.add_trace(go.Scatter(
-        x=price_df.index, y=price_df["Close"],
+        x=x_dates, y=price_df["Close"].tolist(),
         mode="lines+markers", name="Close Price",
         line=dict(color=TEXT_PRI, width=2),
         marker=dict(size=5, color=TEXT_PRI),
         yaxis="y1",
     ))
     fig_price.add_trace(go.Scatter(
-        x=[price_df.index.min(), price_df.index.max()],
+        x=[x_min, x_max],
         y=[overall, overall],
         mode="lines",
         name=f"Sentiment ({overall:+.3f})",
@@ -582,15 +587,15 @@ if not price_df.empty:
         opacity=0.8,
     ))
     fig_price.add_vline(
-        x=event_ts,
+        x=vline_x,
         line=dict(color=ACCENT, width=1, dash="dash"),
         annotation_text="Earnings Call",
         annotation_position="top",
         annotation=dict(font=dict(color=TEXT_DIM, size=10, family="Inter"),
                         bgcolor="rgba(0,0,0,0)", bordercolor="rgba(0,0,0,0)"),
     )
-    fig_price.update_layout(
-        **PLOT_BASE,
+    price_layout = dict(**PLOT_BASE)
+    price_layout.update(
         xaxis=xaxis(showgrid=False),
         yaxis=yaxis(title="Price (USD)", showgrid=True),
         yaxis2=dict(
@@ -608,6 +613,7 @@ if not price_df.empty:
         height=320,
         margin=dict(l=8, r=8, t=32, b=8),
     )
+    fig_price.update_layout(**price_layout)
     st.plotly_chart(fig_price, use_container_width=True, config={"displayModeBar": False})
 else:
     st.markdown(
