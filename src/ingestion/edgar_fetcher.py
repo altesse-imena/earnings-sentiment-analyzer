@@ -51,17 +51,11 @@ def get_cik_for_ticker(ticker: str) -> str | None:
         logger.debug(f"CIK cache hit for {ticker}")
         return cached.get("cik")
 
-    url = f"https://www.sec.gov/cgi-bin/browse-edgar?company=&CIK={ticker}&type=8-K&dateb=&owner=include&count=1&search_text=&action=getcompany&output=atom"
+    tickers_url = "https://www.sec.gov/files/company_tickers.json"
     try:
-        resp = requests.get(url, headers=HEADERS, timeout=15)
+        resp = requests.get(tickers_url, headers=HEADERS, timeout=15)
         resp.raise_for_status()
-        # Extract CIK from the response URL redirect or content
-        company_url = f"https://data.sec.gov/submissions/CIK"
-        # Use the company tickers JSON endpoint instead
-        tickers_url = "https://www.sec.gov/files/company_tickers.json"
-        resp2 = requests.get(tickers_url, headers=HEADERS, timeout=15)
-        resp2.raise_for_status()
-        tickers_data = resp2.json()
+        tickers_data = resp.json()
         for entry in tickers_data.values():
             if entry.get("ticker", "").upper() == ticker.upper():
                 cik = str(entry["cik_str"]).zfill(10)
@@ -73,8 +67,35 @@ def get_cik_for_ticker(ticker: str) -> str | None:
     return None
 
 
+def get_company_name_for_ticker(ticker: str) -> str | None:
+    """Resolve a ticker symbol to the official SEC company name for full-text search."""
+    cache_key = f"company_name_{ticker.upper()}"
+    cached = _load_cache(cache_key)
+    if cached:
+        return cached.get("name")
+
+    tickers_url = "https://www.sec.gov/files/company_tickers.json"
+    try:
+        resp = requests.get(tickers_url, headers=HEADERS, timeout=15)
+        resp.raise_for_status()
+        for entry in resp.json().values():
+            if entry.get("ticker", "").upper() == ticker.upper():
+                name = entry.get("title", "")
+                _save_cache(cache_key, {"name": name})
+                logger.info(f"Resolved {ticker} → company name '{name}'")
+                return name
+    except Exception as e:
+        logger.error(f"Failed to resolve company name for {ticker}: {e}")
+    return None
+
+
 def search_8k_filings(ticker: str, start_year: int, end_year: int) -> list[dict]:
-    """Search SEC EDGAR for 8-K filings containing earnings call transcripts."""
+    """Search SEC EDGAR for 8-K filings containing earnings call transcripts.
+
+    Uses the company's official SEC name (not the ticker symbol) in the full-text
+    query, because EDGAR indexes document content where company names appear, not
+    ticker symbols.
+    """
     cache_key = f"filings_{ticker}_{start_year}_{end_year}"
     cached = _load_cache(cache_key)
     if cached:
@@ -85,28 +106,39 @@ def search_8k_filings(ticker: str, start_year: int, end_year: int) -> list[dict]
     start = f"{start_year}-01-01"
     end = f"{end_year}-12-31"
 
-    # EDGAR full-text search for 8-K filings mentioning earnings calls
+    company_name = get_company_name_for_ticker(ticker)
+    if not company_name:
+        logger.warning(f"Could not resolve company name for {ticker}; skipping EDGAR search")
+        _save_cache(cache_key, results)
+        return results
+
+    import urllib.parse
+    encoded_name = urllib.parse.quote(f'"{company_name}"')
     url = (
-        f"https://efts.sec.gov/LATEST/search-index?q=%22{ticker}%22"
+        f"https://efts.sec.gov/LATEST/search-index?q={encoded_name}"
         f"+%22earnings+call%22&forms=8-K"
         f"&dateRange=custom&startdt={start}&enddt={end}"
     )
 
     try:
-        logger.info(f"Searching EDGAR for {ticker} 8-K filings ({start_year}-{end_year})")
+        logger.info(f"Searching EDGAR for '{company_name}' ({ticker}) 8-K filings ({start_year}-{end_year})")
         resp = requests.get(url, headers=HEADERS, timeout=20)
         resp.raise_for_status()
         data = resp.json()
         hits = data.get("hits", {}).get("hits", [])
         for hit in hits:
             src = hit.get("_source", {})
+            # EDGAR API uses 'adsh' for accession number and 'display_names' for entity name
+            accession_no = src.get("adsh", "")
+            display_names = src.get("display_names", [])
+            entity_name = display_names[0] if isinstance(display_names, list) and display_names else str(display_names or "")
             results.append({
                 "ticker": ticker,
-                "accession_no": src.get("accession_no", ""),
+                "accession_no": accession_no,
                 "file_date": src.get("file_date", ""),
-                "entity_name": src.get("entity_name", ""),
-                "form_type": src.get("form_type", ""),
-                "file_url": f"https://www.sec.gov/Archives/edgar/data/{src.get('file_num', '')}/{src.get('accession_no', '').replace('-', '')}/",
+                "entity_name": entity_name,
+                "form_type": src.get("form", src.get("form_type", "")),
+                "file_url": f"https://www.sec.gov/Archives/edgar/data/{src.get('file_num', '')}/{accession_no.replace('-', '')}/",
             })
         time.sleep(0.5)  # Be polite to SEC servers
     except Exception as e:

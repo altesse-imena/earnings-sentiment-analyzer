@@ -59,27 +59,30 @@ class TestComputePriceChange:
 
 class TestCikResolution:
     @patch("src.ingestion.edgar_fetcher.requests.get")
-    def test_cik_uses_cache_on_second_call(self, mock_get):
-        from src.ingestion.edgar_fetcher import _save_cache, get_cik_for_ticker
-        _save_cache("cik_TESTX", {"cik": "0000123456"})
-        result = get_cik_for_ticker("TESTX")
+    def test_cik_uses_cache_on_second_call(self, mock_get, monkeypatch, tmp_path):
+        import src.ingestion.edgar_fetcher as ef
+        monkeypatch.setattr(ef, "CACHE_DIR", tmp_path)
+        ef._save_cache("cik_TESTX", {"cik": "0000123456"})
+        result = ef.get_cik_for_ticker("TESTX")
         assert result == "0000123456"
         mock_get.assert_not_called()
 
 
 class TestEdgarSearch:
     @patch("src.ingestion.edgar_fetcher.requests.get")
-    def test_search_returns_cached_results(self, mock_get):
-        from src.ingestion.edgar_fetcher import _save_cache, search_8k_filings
+    def test_search_returns_cached_results(self, mock_get, monkeypatch, tmp_path):
+        import src.ingestion.edgar_fetcher as ef
+        monkeypatch.setattr(ef, "CACHE_DIR", tmp_path)
         fake = [{"ticker": "FAKE", "accession_no": "0001234-24-001", "file_date": "2024-02-01"}]
-        _save_cache("filings_FAKE_2024_2024", fake)
-        result = search_8k_filings("FAKE", 2024, 2024)
+        ef._save_cache("filings_FAKE_2024_2024", fake)
+        result = ef.search_8k_filings("FAKE", 2024, 2024)
         assert result == fake
         mock_get.assert_not_called()
 
     @patch("src.ingestion.edgar_fetcher.requests.get")
-    def test_search_handles_api_error(self, mock_get):
-        from src.ingestion.edgar_fetcher import search_8k_filings
+    def test_search_handles_api_error(self, mock_get, monkeypatch, tmp_path):
+        import src.ingestion.edgar_fetcher as ef
+        monkeypatch.setattr(ef, "CACHE_DIR", tmp_path)
         mock_get.side_effect = Exception("Network error")
-        result = search_8k_filings("ERRX", 2023, 2023)
+        result = ef.search_8k_filings("ERRX", 2023, 2023)
         assert isinstance(result, list)

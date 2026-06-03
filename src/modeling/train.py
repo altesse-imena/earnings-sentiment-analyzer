@@ -37,7 +37,7 @@ def load_data() -> tuple[pd.DataFrame, pd.Series, list[str]]:
     return X, y, feature_cols
 
 
-def train_model(X: pd.DataFrame, y: pd.Series) -> lgb.LGBMClassifier:
+def train_model(X: pd.DataFrame, y: pd.Series) -> tuple[lgb.LGBMClassifier, np.ndarray]:
     """Train LightGBM with cross-validation."""
     model = lgb.LGBMClassifier(
         n_estimators=300,

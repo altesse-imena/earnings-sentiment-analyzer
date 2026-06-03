@@ -55,7 +55,7 @@ def get_feature_columns(df: pd.DataFrame) -> list[str]:
         "direction", "pct_change_48h", "close_event",
         "close_48h", "post_date_48h",
     }
-    return [c for c in df.columns if c not in exclude and df[c].dtype in [np.float64, np.int64]]
+    return [c for c in df.columns if c not in exclude and pd.api.types.is_numeric_dtype(df[c])]
 
 
 if __name__ == "__main__":

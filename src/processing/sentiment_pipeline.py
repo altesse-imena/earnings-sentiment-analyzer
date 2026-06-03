@@ -158,8 +158,10 @@ def aggregate_scores(df: pd.DataFrame) -> dict:
             features[f"{section.lower()}_sentiment"] = np.nan
             features[f"{section.lower()}_volatility"] = np.nan
 
-    # Tone shift: QA minus prepared
-    features["tone_shift"] = features["qa_sentiment"] - features["prepared_sentiment"]
+    # Tone shift: QA minus prepared — guard against NaN when a section is absent
+    qa_s   = features.get("qa_sentiment", np.nan)
+    prep_s = features.get("prepared_sentiment", np.nan)
+    features["tone_shift"] = (qa_s - prep_s) if pd.notna(qa_s) and pd.notna(prep_s) else 0.0
 
     # By speaker role
     for role in ["CEO", "CFO", "ANALYST"]:

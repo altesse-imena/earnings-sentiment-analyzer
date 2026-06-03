@@ -56,13 +56,14 @@ def fetch_price_window(
 
         logger.info(f"Fetching prices for {ticker} around {event_date}")
         stock = yf.Ticker(ticker)
-        df = stock.history(start=start, end=end, auto_adjust=True)
+        df = stock.history(start=start, end=end)
 
         if df.empty:
             logger.warning(f"No price data returned for {ticker} around {event_date}")
             return None
 
-        df.index = pd.to_datetime(df.index).tz_localize(None)
+        idx = pd.to_datetime(df.index)
+        df.index = idx.tz_convert(None) if idx.tz is not None else idx
         event_dt = pd.Timestamp(event_date)
 
         # Filter to the actual window (trading days only)

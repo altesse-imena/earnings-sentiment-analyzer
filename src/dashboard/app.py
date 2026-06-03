@@ -4,6 +4,7 @@ Dark Stripe-inspired design system.
 """
 
 import json
+import math
 from pathlib import Path
 
 import joblib
@@ -73,11 +74,9 @@ html, body, [data-testid="stAppViewContainer"],
 }}
 
 /* Sidebar */
-[data-testid="stSidebar"] {{
+section[data-testid="stSidebar"] {{
     background-color: {SURFACE} !important;
     border-right: 1px solid {BORDER} !important;
-}}
-[data-testid="stSidebar"] > div:first-child {{
     padding: 2rem 1.5rem !important;
 }}
 [data-testid="stSidebar"] label,
@@ -149,16 +148,6 @@ hr {{
     border-radius: 6px !important;
     color: {TEXT_PRI} !important;
     font-size: 0.8125rem !important;
-}}
-
-/* Progress bar */
-[data-testid="stProgressBar"] > div > div > div {{
-    background-color: {BORDER} !important;
-    border-radius: 99px !important;
-}}
-[data-testid="stProgressBar"] > div > div > div > div {{
-    background-color: {ACCENT} !important;
-    border-radius: 99px !important;
 }}
 
 /* Remove default metric styling */
@@ -244,7 +233,8 @@ def stat_card(icon_name: str, value: str, label: str,
     badge = ""
     if badge_text:
         badge = f"""<span style="font-size:0.68rem;font-weight:600;color:{badge_color};
-                    background:{badge_color}18;border:1px solid {badge_color}30;
+                    background:{hex_rgba(badge_color, 0.09)};
+                    border:1px solid {hex_rgba(badge_color, 0.19)};
                     padding:1px 7px;border-radius:99px;">{badge_text}</span>"""
     return f"""
     <div style="background:{SURFACE};border:1px solid {BORDER};border-radius:10px;
@@ -282,6 +272,22 @@ def sidebar_row(label: str, value: str):
     </div>""", unsafe_allow_html=True)
 
 
+def hex_rgba(hex_color: str, alpha: float) -> str:
+    """Convert a 6-digit hex color string to rgba() CSS notation."""
+    h = hex_color.lstrip("#")
+    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    return f"rgba({r},{g},{b},{alpha})"
+
+
+def safe_float(val, default: float = 0.0) -> float:
+    """Convert val to float, returning default for None, NaN, or non-numeric values."""
+    try:
+        v = float(val)
+        return v if not math.isnan(v) else default
+    except (TypeError, ValueError):
+        return default
+
+
 def sentiment_color(v: float) -> str:
     if v > 0.05: return POS
     if v < -0.05: return NEG
@@ -317,7 +323,8 @@ def load_price_data(ticker: str, event_date: str) -> pd.DataFrame:
     if not p.exists():
         return pd.DataFrame()
     df = pd.read_csv(p, index_col=0, parse_dates=True)
-    df.index = pd.to_datetime(df.index).tz_localize(None)
+    idx = pd.to_datetime(df.index)
+    df.index = idx.tz_convert(None) if idx.tz is not None else idx
     return df
 
 
@@ -463,9 +470,9 @@ if model is not None and not df_matrix.empty and report:
 
 section_label("Overview", "activity")
 
-overall  = float(row.get("overall_sentiment") or 0)
-ceo_sent = float(row.get("ceo_sentiment") or 0)
-tone_sh  = float(row.get("tone_shift") or 0)
+overall  = safe_float(row.get("overall_sentiment"))
+ceo_sent = safe_float(row.get("ceo_sentiment"))
+tone_sh  = safe_float(row.get("tone_shift"))
 
 c1, c2, c3, c4 = st.columns(4, gap="small")
 
@@ -505,7 +512,7 @@ col_l, col_r = st.columns(2, gap="medium")
 with col_l:
     section_label("Sentiment by Speaker", "user")
     speaker_vals = {
-        role: float(row.get(f"{role.lower()}_sentiment") or 0)
+        role: safe_float(row.get(f"{role.lower()}_sentiment"))
         for role in ["CEO", "CFO", "ANALYST"]
     }
     fig_speaker = go.Figure(go.Bar(
@@ -531,8 +538,8 @@ with col_l:
 
 with col_r:
     section_label("Prepared Remarks vs Q&A", "message")
-    prep = float(row.get("prepared_sentiment") or 0)
-    qa   = float(row.get("qa_sentiment") or 0)
+    prep = safe_float(row.get("prepared_sentiment"))
+    qa   = safe_float(row.get("qa_sentiment"))
     fig_sections = go.Figure(go.Bar(
         x=["Prepared Remarks", "Q&A"],
         y=[prep, qa],
@@ -562,7 +569,6 @@ section_label("5-Day Price Movement", "dollar")
 price_df = load_price_data(ticker, event_date)
 
 if not price_df.empty:
-    event_ts = pd.Timestamp(event_date)
     fig_price = go.Figure()
 
     x_dates  = [d.strftime("%Y-%m-%d") for d in price_df.index]
@@ -677,7 +683,7 @@ with col_pred:
 
         driver_text = ""
         if not shap_df.empty:
-            top_feat     = shap_df.iloc[0]["feature"].replace("_", " ")
+            top_feat     = shap_df.sort_values("mean_abs_shap", ascending=False).iloc[0]["feature"].replace("_", " ")
             dir_word     = "positive" if pred_label == 1 else "negative"
             driver_text  = f"Primary driver: <strong style='color:{TEXT_PRI};'>{top_feat}</strong> signals {dir_word} momentum heading into the call."
 
@@ -697,8 +703,8 @@ with col_pred:
         st.markdown(f"""
         <div style="padding:0.25rem 0;">
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.4rem;">
-                <div style="width:50px;height:50px;background:{pred_color}18;border-radius:11px;
-                            border:1px solid {pred_color}35;display:flex;align-items:center;
+                <div style="width:50px;height:50px;background:{hex_rgba(pred_color, 0.09)};border-radius:11px;
+                            border:1px solid {hex_rgba(pred_color, 0.21)};display:flex;align-items:center;
                             justify-content:center;flex-shrink:0;">
                     {icon(pred_icon, pred_color, 22)}
                 </div>
