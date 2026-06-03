@@ -586,13 +586,20 @@ if not price_df.empty:
         yaxis="y2",
         opacity=0.8,
     ))
-    fig_price.add_vline(
-        x=vline_x,
+    fig_price.add_shape(
+        type="line",
+        x0=vline_x, x1=vline_x, y0=0, y1=1,
+        xref="x", yref="paper",
         line=dict(color=ACCENT, width=1, dash="dash"),
-        annotation_text="Earnings Call",
-        annotation_position="top",
-        annotation=dict(font=dict(color=TEXT_DIM, size=10, family="Inter"),
-                        bgcolor="rgba(0,0,0,0)", bordercolor="rgba(0,0,0,0)"),
+    )
+    fig_price.add_annotation(
+        x=vline_x, y=1, xref="x", yref="paper",
+        text="Earnings Call",
+        showarrow=False,
+        xanchor="left", yanchor="bottom",
+        font=dict(color=TEXT_DIM, size=10, family="Inter"),
+        bgcolor="rgba(0,0,0,0)",
+        bordercolor="rgba(0,0,0,0)",
     )
     price_layout = dict(**PLOT_BASE)
     price_layout.update(
