@@ -376,7 +376,7 @@ with st.sidebar:
         label_visibility="collapsed",
     )
 
-    st.html(\1)
+    st.html("<div style='height:0.75rem'></div>")
     st.button("Analyze")
 
     st.html(
@@ -497,7 +497,7 @@ with c4:
             badge_text=badge_label, badge_color=conf_color,
         ))
     else:
-        st.html(\1)
+        st.html(stat_card("cpu", "—", "Model Confidence"))
 
 divider()
 
