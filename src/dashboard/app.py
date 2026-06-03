@@ -376,9 +376,6 @@ with st.sidebar:
         label_visibility="collapsed",
     )
 
-    st.html("<div style='height:0.75rem'></div>")
-    st.button("Analyze")
-
     st.html(
         f'<div style="border-top:1px solid {BORDER};margin:1.5rem 0;"></div>',
     )
