@@ -90,11 +90,11 @@ def get_company_name_for_ticker(ticker: str) -> str | None:
 
 
 def search_8k_filings(ticker: str, start_year: int, end_year: int) -> list[dict]:
-    """Search SEC EDGAR for 8-K filings containing earnings call transcripts.
+    """Search SEC EDGAR for 8-K filings using the company's submissions endpoint.
 
-    Uses the company's official SEC name (not the ticker symbol) in the full-text
-    query, because EDGAR indexes document content where company names appear, not
-    ticker symbols.
+    Uses the CIK-scoped submissions API (data.sec.gov/submissions/CIK{cik}.json)
+    which returns only that company's own filings — reliable regardless of whether
+    the company name appears in other companies' documents.
     """
     cache_key = f"filings_{ticker}_{start_year}_{end_year}"
     cached = _load_cache(cache_key)
@@ -103,54 +103,62 @@ def search_8k_filings(ticker: str, start_year: int, end_year: int) -> list[dict]
         return cached
 
     results = []
-    start = f"{start_year}-01-01"
-    end = f"{end_year}-12-31"
 
-    company_name = get_company_name_for_ticker(ticker)
-    if not company_name:
-        logger.warning(f"Could not resolve company name for {ticker}; skipping EDGAR search")
+    cik = get_cik_for_ticker(ticker)
+    if not cik:
+        logger.warning(f"Could not resolve CIK for {ticker}; skipping EDGAR search")
         _save_cache(cache_key, results)
         return results
 
-    import urllib.parse
-    encoded_name = urllib.parse.quote(f'"{company_name}"')
-    url = (
-        f"https://efts.sec.gov/LATEST/search-index?q={encoded_name}"
-        f"+%22earnings+call%22&forms=8-K"
-        f"&dateRange=custom&startdt={start}&enddt={end}"
-    )
+    company_name = get_company_name_for_ticker(ticker) or ticker
 
+    url = f"https://data.sec.gov/submissions/CIK{cik}.json"
     try:
-        logger.info(f"Searching EDGAR for '{company_name}' ({ticker}) 8-K filings ({start_year}-{end_year})")
+        logger.info(f"Fetching submissions for '{company_name}' ({ticker}, CIK {cik})")
         resp = requests.get(url, headers=HEADERS, timeout=20)
         resp.raise_for_status()
         data = resp.json()
-        hits = data.get("hits", {}).get("hits", [])
-        for hit in hits:
-            src = hit.get("_source", {})
-            # EDGAR API uses 'adsh' for accession number and 'display_names' for entity name
-            accession_no = src.get("adsh", "")
-            display_names = src.get("display_names", [])
-            entity_name = display_names[0] if isinstance(display_names, list) and display_names else str(display_names or "")
+        recent = data.get("filings", {}).get("recent", {})
+
+        forms       = recent.get("form", [])
+        dates       = recent.get("filingDate", [])
+        accessions  = recent.get("accessionNumber", [])
+        primary_doc = recent.get("primaryDocument", [])
+
+        for i in range(len(forms)):
+            if forms[i] != "8-K":
+                continue
+            filing_year = int(dates[i][:4]) if dates[i] else 0
+            if not (start_year <= filing_year <= end_year):
+                continue
+
+            acc = accessions[i]
+            cik_int = int(cik)
             results.append({
                 "ticker": ticker,
-                "accession_no": accession_no,
-                "file_date": src.get("file_date", ""),
-                "entity_name": entity_name,
-                "form_type": src.get("form", src.get("form_type", "")),
-                "file_url": f"https://www.sec.gov/Archives/edgar/data/{src.get('file_num', '')}/{accession_no.replace('-', '')}/",
+                "accession_no": acc,
+                "file_date": dates[i],
+                "entity_name": company_name,
+                "form_type": forms[i],
+                "primary_doc": primary_doc[i] if i < len(primary_doc) else "",
+                "file_url": f"https://www.sec.gov/Archives/edgar/data/{cik_int}/{acc.replace('-', '')}/",
             })
-        time.sleep(0.5)  # Be polite to SEC servers
+
+        time.sleep(0.3)
     except Exception as e:
-        logger.error(f"EDGAR search failed for {ticker}: {e}")
+        logger.error(f"Submissions fetch failed for {ticker}: {e}")
 
     _save_cache(cache_key, results)
-    logger.info(f"Found {len(results)} 8-K filings for {ticker}")
+    logger.info(f"Found {len(results)} 8-K filings for {ticker} ({start_year}-{end_year})")
     return results
 
 
-def fetch_transcript_text(accession_no: str, ticker: str) -> str | None:
-    """Fetch the full text of an 8-K filing from EDGAR."""
+def fetch_transcript_text(accession_no: str, ticker: str, primary_doc: str = "") -> str | None:
+    """Fetch the full text of an 8-K filing from EDGAR.
+
+    Tries the primary_doc path directly first; falls back to parsing the filing
+    index page to find the best document link.
+    """
     cache_key = f"transcript_{accession_no.replace('-', '_')}"
     cached = _load_cache(cache_key)
     if cached:
@@ -161,41 +169,58 @@ def fetch_transcript_text(accession_no: str, ticker: str) -> str | None:
     if not cik:
         return None
 
-    # Try fetching the index page for this filing
-    index_url = f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{acc_clean}/{accession_no}-index.htm"
+    cik_int = int(cik)
+    base_url = f"https://www.sec.gov/Archives/edgar/data/{cik_int}/{acc_clean}"
+    from bs4 import BeautifulSoup
+
+    def _extract_text(url: str) -> str | None:
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=30)
+            r.raise_for_status()
+            soup = BeautifulSoup(r.text, "html.parser")
+            return soup.get_text(separator="\n", strip=True)
+        except Exception as e:
+            logger.debug(f"Could not fetch {url}: {e}")
+            return None
+
+    # 1. Try primary document directly if provided
+    if primary_doc:
+        text = _extract_text(f"{base_url}/{primary_doc}")
+        if text and len(text) > 500:
+            _save_cache(cache_key, {"text": text})
+            return text
+
+    # 2. Parse the filing index to find the best exhibit document
+    index_url = f"{base_url}/{accession_no}-index.htm"
     try:
         resp = requests.get(index_url, headers=HEADERS, timeout=20)
         resp.raise_for_status()
-        # Parse to find the actual document URL
-        from bs4 import BeautifulSoup
         soup = BeautifulSoup(resp.text, "html.parser")
         doc_link = None
+
         for row in soup.find_all("tr"):
             cells = row.find_all("td")
             if len(cells) >= 3:
                 desc = cells[1].get_text(strip=True).lower()
                 if any(k in desc for k in ["transcript", "exhibit 99", "ex-99", "ex99"]):
-                    link = cells[2].find("a")
-                    if link:
-                        doc_link = "https://www.sec.gov" + link["href"]
+                    a = cells[2].find("a")
+                    if a:
+                        doc_link = "https://www.sec.gov" + a["href"]
                         break
 
         if not doc_link:
-            # Fall back to first document link
-            first_link = soup.find("table", {"class": "tableFile"})
-            if first_link:
-                a = first_link.find("a")
+            first_table = soup.find("table", {"class": "tableFile"})
+            if first_table:
+                a = first_table.find("a")
                 if a:
                     doc_link = "https://www.sec.gov" + a["href"]
 
         if doc_link:
             time.sleep(0.3)
-            doc_resp = requests.get(doc_link, headers=HEADERS, timeout=30)
-            doc_resp.raise_for_status()
-            soup2 = BeautifulSoup(doc_resp.text, "html.parser")
-            text = soup2.get_text(separator="\n", strip=True)
-            _save_cache(cache_key, {"text": text})
-            return text
+            text = _extract_text(doc_link)
+            if text and len(text) > 500:
+                _save_cache(cache_key, {"text": text})
+                return text
 
     except Exception as e:
         logger.error(f"Failed to fetch transcript {accession_no}: {e}")
@@ -225,7 +250,7 @@ def run_ingestion(tickers: list[str], years: list[int]):
                 logger.debug(f"Already saved: {out_path.name}")
                 continue
 
-            text = fetch_transcript_text(acc, ticker)
+            text = fetch_transcript_text(acc, ticker, primary_doc=filing.get("primary_doc", ""))
             if text and len(text) > 500:
                 out_path.write_text(text)
                 saved += 1
