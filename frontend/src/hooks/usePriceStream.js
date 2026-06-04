@@ -23,8 +23,7 @@ export function usePriceStream() {
 
     setStatus('connecting')
 
-    const proto = window.location.protocol === 'https:' ? 'wss' : 'ws'
-    const url = `${proto}://${window.location.host}/ws/prices`
+    const url = `${import.meta.env.VITE_API_BASE_URL.replace(/^http/, 'ws')}/ws/prices`
     const ws = new WebSocket(url)
     wsRef.current = ws
 
