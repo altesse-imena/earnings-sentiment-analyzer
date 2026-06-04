@@ -1,0 +1,28 @@
+{
+  "accuracy": 0.375,
+  "auc_roc": 0.5,
+  "cv_auc_mean": NaN,
+  "cv_auc_std": NaN,
+  "top_feature": "overall_sentiment",
+  "n_samples": 8,
+  "n_features": 17,
+  "feature_columns": [
+    "overall_sentiment",
+    "sentiment_volatility",
+    "positive_ratio",
+    "negative_ratio",
+    "neutral_ratio",
+    "prepared_sentiment",
+    "prepared_volatility",
+    "qa_sentiment",
+    "qa_volatility",
+    "ceo_sentiment",
+    "ceo_sentence_count",
+    "cfo_sentiment",
+    "cfo_sentence_count",
+    "analyst_sentiment",
+    "analyst_sentence_count",
+    "total_sentences",
+    "tone_shift"
+  ]
+}
