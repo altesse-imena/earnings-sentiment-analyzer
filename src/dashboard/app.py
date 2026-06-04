@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+import streamlit.components.v1 as components
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 
@@ -62,11 +63,7 @@ html, body, [data-testid="stAppViewContainer"],
     color: {TEXT_PRI} !important;
 }}
 
-/* Hide Streamlit chrome.
-   header[data-testid="stHeader"] is position:absolute so it does not affect layout.
-   We use opacity:0 + pointer-events:none rather than display:none so that
-   stExpandSidebarButton (the sidebar re-open toggle inside the header) can be
-   selectively made visible again via opacity:1 — impossible with display:none. */
+/* Hide Streamlit chrome */
 #MainMenu, footer,
 [data-testid="stToolbar"],
 [data-testid="stToolbarActions"],
@@ -75,12 +72,9 @@ html, body, [data-testid="stAppViewContainer"],
 [data-testid="stMainMenuButton"],
 [data-testid="stScreencast"],
 [data-testid="stAppDeployButton"],
+header[data-testid="stHeader"],
 .stDeployButton {{
     display: none !important;
-}}
-header[data-testid="stHeader"] {{
-    opacity: 0 !important;
-    pointer-events: none !important;
 }}
 
 /* Collapse button (inside expanded sidebar) — Streamlit sets visibility:hidden by default */
@@ -95,32 +89,6 @@ header[data-testid="stHeader"] {{
 [data-testid="stSidebarCollapseButton"] [data-testid="stIconMaterial"] {{
     color: {TEXT_MUT} !important;
     font-size: 1.1rem !important;
-}}
-
-/* Expand button — visible when sidebar is collapsed.
-   Override the header's opacity:0 and position it as a fixed tab at the left edge. */
-[data-testid="stExpandSidebarButton"] {{
-    opacity: 1 !important;
-    pointer-events: all !important;
-    position: fixed !important;
-    left: 0 !important;
-    top: 50vh !important;
-    transform: translateY(-50%) !important;
-    z-index: 9999 !important;
-    width: 1.5rem !important;
-    height: 3rem !important;
-    background-color: {SURFACE} !important;
-    border: 1px solid {BORDER} !important;
-    border-left: none !important;
-    border-radius: 0 6px 6px 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}}
-[data-testid="stExpandSidebarButton"] [data-testid="stIconMaterial"] {{
-    color: {TEXT_MUT} !important;
-    font-size: 1rem !important;
-    opacity: 1 !important;
 }}
 
 .block-container {{
@@ -474,6 +442,63 @@ with st.sidebar:
         </div>""")
     else:
         st.html(f'<p style="font-size:0.78rem;color:{TEXT_DIM};">Run train.py to populate.</p>')
+
+# ── Sidebar expand button (injected into parent DOM via JS) ───────────────────
+# CSS cannot reach stExpandSidebarButton inside display:none header.
+# This component runs in a same-origin iframe; window.parent.document is accessible.
+components.html(f"""
+<script>
+(function() {{
+    try {{
+        var d = window.parent.document;
+        var old = d.getElementById('st-expand-tab');
+        if (old) old.remove();
+
+        var btn = d.createElement('button');
+        btn.id = 'st-expand-tab';
+        btn.title = 'Expand sidebar';
+        btn.innerHTML = '&#8250;';
+        Object.assign(btn.style, {{
+            position:     'fixed',
+            left:         '0',
+            top:          '50vh',
+            transform:    'translateY(-50%)',
+            width:        '1.5rem',
+            height:       '3rem',
+            background:   '{SURFACE}',
+            border:       '1px solid {BORDER}',
+            borderLeft:   'none',
+            borderRadius: '0 6px 6px 0',
+            zIndex:       '99999',
+            cursor:       'pointer',
+            display:      'none',
+            alignItems:   'center',
+            justifyContent: 'center',
+            color:        '{TEXT_MUT}',
+            fontSize:     '1.2rem',
+            fontFamily:   'Inter, sans-serif',
+            lineHeight:   '1',
+        }});
+
+        btn.addEventListener('click', function() {{
+            var real = d.querySelector('[data-testid="stExpandSidebarButton"]');
+            if (real) real.click();
+        }});
+
+        d.body.appendChild(btn);
+
+        function sync() {{
+            var sb = d.querySelector('[data-testid="stSidebar"]');
+            if (!sb) return;
+            var collapsed = sb.getBoundingClientRect().left < -50;
+            btn.style.display = collapsed ? 'flex' : 'none';
+        }}
+        setInterval(sync, 250);
+        sync();
+    }} catch(e) {{}}
+}})();
+</script>
+""", height=0)
 
 # ── Header ─────────────────────────────────────────────────────────────────────
 
