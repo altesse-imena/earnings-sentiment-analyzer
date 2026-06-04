@@ -78,9 +78,19 @@ html, body, [data-testid="stAppViewContainer"],
 section[data-testid="stSidebar"] {{
     background-color: {SURFACE} !important;
     border-right: 1px solid {BORDER} !important;
-    padding: 2rem 1.5rem !important;
 }}
-[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] > div:first-child {{
+    padding: 1.75rem 1.25rem 2rem !important;
+}}
+[data-testid="stSidebar"] label {{
+    color: {TEXT_MUT} !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.72rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    margin-bottom: 0.3rem !important;
+}}
 [data-testid="stSidebar"] p,
 [data-testid="stSidebar"] span {{
     color: {TEXT_PRI} !important;
@@ -347,30 +357,25 @@ shap_df     = load_shap_values()
 # ── Sidebar ────────────────────────────────────────────────────────────────────
 
 with st.sidebar:
+    # Branding
     st.html(f"""
-    <div style="margin-bottom:2rem;">
-        <div style="font-size:1rem;font-weight:700;color:{TEXT_PRI};letter-spacing:-0.01em;">
+    <div style="padding-bottom:1.5rem;border-bottom:1px solid {BORDER};margin-bottom:1.5rem;">
+        <div style="font-size:0.95rem;font-weight:700;color:{TEXT_PRI};
+                    letter-spacing:-0.01em;line-height:1.2;">
             Earnings Sentiment
         </div>
-        <div style="font-size:0.73rem;color:{TEXT_DIM};margin-top:3px;">
-            NLP + price analytics
+        <div style="font-size:0.72rem;color:{TEXT_DIM};margin-top:4px;letter-spacing:0.01em;">
+            FinBERT · LightGBM · SEC EDGAR
         </div>
     </div>""")
 
-    st.html(f"""
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:0.5rem;">
-        {icon("search", TEXT_DIM, 12)}
-        <span style="font-size:0.68rem;font-weight:600;letter-spacing:0.1em;
-                     text-transform:uppercase;color:{TEXT_DIM};">Selection</span>
-    </div>""")
-
+    # Ticker + date selectors with CSS-styled labels
     available_tickers = (
         sorted(df_features["ticker"].unique().tolist()) if not df_features.empty else []
     )
     ticker = st.selectbox(
         "Ticker",
         available_tickers if available_tickers else ["No data"],
-        label_visibility="collapsed",
     )
 
     available_dates = []
@@ -382,30 +387,38 @@ with st.sidebar:
     event_date = st.selectbox(
         "Earnings Date",
         available_dates if available_dates else ["No data"],
-        label_visibility="collapsed",
     )
 
-    st.html(
-        f'<div style="border-top:1px solid {BORDER};margin:1.5rem 0;"></div>',
-    )
-
-    st.html(f"""
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:0.75rem;">
-        {icon("sliders", TEXT_DIM, 12)}
-        <span style="font-size:0.68rem;font-weight:600;letter-spacing:0.1em;
-                     text-transform:uppercase;color:{TEXT_DIM};">Model Performance</span>
-    </div>""")
+    # Model metrics
+    st.html(f'<div style="border-top:1px solid {BORDER};margin:1.5rem 0 1rem;"></div>')
 
     if report:
-        sidebar_row("AUC-ROC",    str(report.get("auc_roc", "—")))
-        sidebar_row("Accuracy",   str(report.get("accuracy", "—")))
-        sidebar_row("CV AUC",     f"{report.get('cv_auc_mean','—')} ± {report.get('cv_auc_std','')}")
-        sidebar_row("Top Feature",str(report.get("top_feature", "—"))[:22])
-        sidebar_row("Samples",    str(report.get("n_samples", "—")))
-    else:
-        st.html(
-            f'<p style="font-size:0.78rem;color:{TEXT_DIM};">Run train.py to populate.</p>',
+        def _metric_row(label, value):
+            return f"""
+            <div style="display:flex;justify-content:space-between;align-items:center;
+                        padding:0.4rem 0;border-bottom:1px solid {BORDER}20;">
+                <span style="font-size:0.75rem;color:{TEXT_MUT};">{label}</span>
+                <span style="font-size:0.75rem;font-weight:600;color:{TEXT_PRI};
+                             font-variant-numeric:tabular-nums;">{value}</span>
+            </div>"""
+
+        rows = (
+            _metric_row("AUC-ROC",     str(report.get("auc_roc", "—")))
+            + _metric_row("Accuracy",  str(report.get("accuracy", "—")))
+            + _metric_row("CV AUC",    f"{report.get('cv_auc_mean','—')} ± {report.get('cv_auc_std','')}")
+            + _metric_row("Top Feature", str(report.get("top_feature", "—"))[:20])
+            + _metric_row("Samples",   str(report.get("n_samples", "—")))
         )
+        st.html(f"""
+        <div style="margin-bottom:0.25rem;">
+            <div style="font-size:0.68rem;font-weight:600;letter-spacing:0.1em;
+                        text-transform:uppercase;color:{TEXT_DIM};margin-bottom:0.6rem;">
+                Model Performance
+            </div>
+            {rows}
+        </div>""")
+    else:
+        st.html(f'<p style="font-size:0.78rem;color:{TEXT_DIM};">Run train.py to populate.</p>')
 
 # ── Header ─────────────────────────────────────────────────────────────────────
 
