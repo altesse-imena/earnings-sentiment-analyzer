@@ -1,9 +1,13 @@
-import { Play } from 'lucide-react'
+import { Play, X } from 'lucide-react'
 import { useState } from 'react'
 import { triggerProcess, triggerTrain } from '../../api/endpoints'
 import { useModelReport } from '../../hooks/useDashboard'
 
-export default function Sidebar({ ticker, date, tickers, dates, onTickerChange, onDateChange }) {
+export default function Sidebar({
+  ticker, date, tickers, dates,
+  onTickerChange, onDateChange,
+  drawerOpen, onClose,
+}) {
   const { data: report } = useModelReport()
   const [running, setRunning] = useState(false)
 
@@ -20,7 +24,12 @@ export default function Sidebar({ ticker, date, tickers, dates, onTickerChange, 
   }
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${drawerOpen ? 'drawer-open' : ''}`}>
+      {/* Close button — mobile drawer only */}
+      <button className="sidebar-close-btn" onClick={onClose} aria-label="Close">
+        <X size={18} />
+      </button>
+
       <div>
         <div className="section-label">Ticker</div>
         <div className="select-wrap">

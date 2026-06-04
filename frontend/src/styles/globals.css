@@ -285,6 +285,39 @@ html, body, #root {
   background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
+.header-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.header-filter-btn {
+  display: none;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.header-filter-btn:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.header-filter-label {
+  color: var(--accent);
+}
+
 .header-divider {
   border: none;
   border-top: 1px solid var(--border);
@@ -566,38 +599,71 @@ html, body, #root {
 
 .nav-hamburger:hover { color: var(--text-primary); }
 
-/* ── Responsive ───────────────────────────────────── */
+/* ── Drawer (mobile sidebar overlay) ─────────────── */
+.drawer-backdrop {
+  display: none;
+}
+
+.sidebar-close-btn {
+  display: none;
+}
+
 @media (max-width: 768px) {
-  /* Sidebar collapses into a top strip */
+  /* Backdrop */
+  .drawer-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 199;
+  }
+
+  /* Sidebar becomes a fixed off-screen drawer */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100dvh;
+    width: 280px;
+    z-index: 200;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    border-right: 1px solid var(--border);
+    padding-top: 3.5rem;
+    overflow-y: auto;
+  }
+
+  .sidebar.drawer-open {
+    transform: translateX(0);
+  }
+
+  /* Close X button visible inside drawer */
+  .sidebar-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: var(--radius-sm);
+    transition: color 0.15s;
+  }
+
+  .sidebar-close-btn:hover { color: var(--text-primary); }
+
+  /* Layout: single column, no sidebar in flow */
   .layout {
     flex-direction: column;
   }
 
-  .sidebar {
-    width: 100%;
-    min-width: 0;
-    height: auto;
-    position: static;
-    flex-direction: row;
-    flex-wrap: wrap;
-    padding: 1rem;
-    gap: 0.75rem;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .sidebar > div {
-    flex: 1 1 140px;
-    min-width: 0;
-  }
-
-  .sidebar-metric-row {
-    padding: 0.2rem 0;
-  }
-
-  /* Main content full width */
-  .layout-main {
-    padding: 1rem;
+  /* Show filter button in header on mobile */
+  .header-filter-btn {
+    display: flex;
   }
 
   /* Stat cards: 2 columns on mobile */
