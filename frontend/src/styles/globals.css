@@ -1,4 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Abril+Fatface&display=swap');
+
+/* Elephant is a Microsoft/Office system font; Abril Fatface is used when it is not installed */
+:root {
+  --font-heading: 'Elephant', 'Abril Fatface', Georgia, serif;
+}
 
 :root {
   --bg-base: #0A0A0F;
@@ -123,9 +128,11 @@ html, body, #root {
 }
 
 .stat-card-value {
-  font-size: 1.55rem;
-  font-weight: 700;
+  font-family: var(--font-heading);
+  font-size: 1.65rem;
+  font-weight: 400;
   line-height: 1.2;
+  letter-spacing: 0.01em;
 }
 
 .stat-card-sub {
@@ -241,10 +248,12 @@ html, body, #root {
 }
 
 .header-title {
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 400;
   color: var(--text-primary);
   margin-bottom: 0.2rem;
+  letter-spacing: 0.01em;
 }
 
 .header-tagline {
@@ -377,10 +386,12 @@ html, body, #root {
 
 /* ── Prediction panel ─────────────────────────────── */
 .prediction-direction {
-  font-size: 2.5rem;
-  font-weight: 700;
+  font-family: var(--font-heading);
+  font-size: 2.75rem;
+  font-weight: 400;
   line-height: 1;
   margin-bottom: 0.5rem;
+  letter-spacing: 0.02em;
 }
 
 .confidence-track {
@@ -509,9 +520,11 @@ html, body, #root {
 }
 
 .card-title {
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 400;
   color: var(--text-primary);
+  letter-spacing: 0.01em;
 }
 
 .icon-btn {
@@ -544,10 +557,11 @@ html, body, #root {
 }
 
 .nav-brand {
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 400;
   color: var(--text-primary);
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
   margin-right: 2rem;
 }
 
@@ -593,10 +607,12 @@ html, body, #root {
 }
 
 .news-page-title {
-  font-size: 1.55rem;
-  font-weight: 700;
+  font-family: var(--font-heading);
+  font-size: 1.75rem;
+  font-weight: 400;
   color: var(--text-primary);
   margin-bottom: 0.25rem;
+  letter-spacing: 0.01em;
 }
 
 .news-page-sub {
@@ -662,10 +678,11 @@ html, body, #root {
 }
 
 .ai-signal-direction {
-  font-size: 2.25rem;
-  font-weight: 700;
+  font-family: var(--font-heading);
+  font-size: 2.4rem;
+  font-weight: 400;
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.02em;
 }
 
 .ai-signal-meta {
@@ -789,12 +806,14 @@ html, body, #root {
 }
 
 .article-card-headline {
-  font-size: 0.9375rem;
-  font-weight: 600;
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 400;
   color: var(--text-primary);
-  line-height: 1.4;
+  line-height: 1.35;
   margin-bottom: 0.4rem;
   transition: color 0.15s;
+  letter-spacing: 0.01em;
 }
 
 .article-card:hover .article-card-headline {
