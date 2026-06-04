@@ -62,11 +62,71 @@ html, body, [data-testid="stAppViewContainer"],
     color: {TEXT_PRI} !important;
 }}
 
-/* Hide Streamlit chrome */
-#MainMenu, footer, [data-testid="stToolbar"],
-[data-testid="stDecoration"], [data-testid="stStatusWidget"],
-.stDeployButton, header[data-testid="stHeader"] {{
+/* Hide Streamlit chrome.
+   header[data-testid="stHeader"] is position:absolute (out of flow) so keeping it
+   in the DOM does not affect layout. We hide its toolbar children but leave the
+   header itself present so stExpandSidebarButton (the sidebar re-open toggle) works. */
+#MainMenu, footer,
+[data-testid="stToolbar"],
+[data-testid="stToolbarActions"],
+[data-testid="stDecoration"],
+[data-testid="stStatusWidget"],
+[data-testid="stMainMenuButton"],
+[data-testid="stScreencast"],
+[data-testid="stAppDeployButton"],
+[data-testid="stLogoSpacer"],
+.stDeployButton {{
     display: none !important;
+}}
+
+/* Make the header itself invisible — transparent bg, no border, no shadow.
+   It stays in the DOM at 0 height (position:absolute, so no layout impact). */
+header[data-testid="stHeader"] {{
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}}
+
+/* Collapse button (inside expanded sidebar) — Streamlit sets visibility:hidden by default */
+[data-testid="stSidebarCollapseButton"] {{
+    visibility: visible !important;
+}}
+[data-testid="stSidebarCollapseButton"] button {{
+    visibility: visible !important;
+    background: transparent !important;
+    border-radius: 6px !important;
+}}
+[data-testid="stSidebarCollapseButton"] [data-testid="stIconMaterial"] {{
+    color: {TEXT_MUT} !important;
+    font-size: 1.1rem !important;
+}}
+
+/* Expand button — shown when sidebar is collapsed.
+   Lives inside the absolute-positioned header; positioned to sit at the left edge. */
+[data-testid="stExpandSidebarButton"] {{
+    position: fixed !important;
+    left: 0 !important;
+    top: 50vh !important;
+    transform: translateY(-50%) !important;
+    z-index: 9999 !important;
+    width: 1.5rem !important;
+    height: 3rem !important;
+    background-color: {SURFACE} !important;
+    border: 1px solid {BORDER} !important;
+    border-left: none !important;
+    border-radius: 0 6px 6px 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: all !important;
+}}
+[data-testid="stExpandSidebarButton"] [data-testid="stIconMaterial"] {{
+    color: {TEXT_MUT} !important;
+    font-size: 1rem !important;
+    visibility: visible !important;
 }}
 
 .block-container {{
@@ -168,17 +228,6 @@ hr {{
     padding: 0 !important;
 }}
 
-/* Sidebar collapse/expand toggle */
-[data-testid="stSidebarCollapsedControl"] {{
-    background-color: {SURFACE} !important;
-    border: 1px solid {BORDER} !important;
-    border-left: none !important;
-    border-radius: 0 6px 6px 0 !important;
-}}
-[data-testid="stSidebarCollapsedControl"] svg {{
-    fill: {TEXT_MUT} !important;
-    color: {TEXT_MUT} !important;
-}}
 </style>
 """)
 
