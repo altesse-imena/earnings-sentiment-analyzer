@@ -167,6 +167,18 @@ hr {{
     border: none !important;
     padding: 0 !important;
 }}
+
+/* Sidebar collapse/expand toggle */
+[data-testid="stSidebarCollapsedControl"] {{
+    background-color: {SURFACE} !important;
+    border: 1px solid {BORDER} !important;
+    border-left: none !important;
+    border-radius: 0 6px 6px 0 !important;
+}}
+[data-testid="stSidebarCollapsedControl"] svg {{
+    fill: {TEXT_MUT} !important;
+    color: {TEXT_MUT} !important;
+}}
 </style>
 """)
 
