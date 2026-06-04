@@ -44,15 +44,19 @@ async def lifespan(app: FastAPI):
     shap_path = REPORTS_DIR / "shap_values.csv"
     app.state.shap_df = pd.read_csv(shap_path) if shap_path.exists() else pd.DataFrame()
 
-    app.state.price_task = asyncio.create_task(price_broadcast_loop())
+    try:
+        app.state.price_task = asyncio.create_task(price_broadcast_loop())
+    except RuntimeError:
+        app.state.price_task = None
 
     yield
 
-    app.state.price_task.cancel()
-    try:
-        await app.state.price_task
-    except asyncio.CancelledError:
-        pass
+    if app.state.price_task is not None:
+        app.state.price_task.cancel()
+        try:
+            await app.state.price_task
+        except asyncio.CancelledError:
+            pass
 
 
 app = FastAPI(title="Earnings Sentiment API", lifespan=lifespan)
