@@ -63,9 +63,10 @@ html, body, [data-testid="stAppViewContainer"],
 }}
 
 /* Hide Streamlit chrome.
-   header[data-testid="stHeader"] is position:absolute (out of flow) so keeping it
-   in the DOM does not affect layout. We hide its toolbar children but leave the
-   header itself present so stExpandSidebarButton (the sidebar re-open toggle) works. */
+   header[data-testid="stHeader"] is position:absolute so it does not affect layout.
+   We use opacity:0 + pointer-events:none rather than display:none so that
+   stExpandSidebarButton (the sidebar re-open toggle inside the header) can be
+   selectively made visible again via opacity:1 — impossible with display:none. */
 #MainMenu, footer,
 [data-testid="stToolbar"],
 [data-testid="stToolbarActions"],
@@ -74,17 +75,12 @@ html, body, [data-testid="stAppViewContainer"],
 [data-testid="stMainMenuButton"],
 [data-testid="stScreencast"],
 [data-testid="stAppDeployButton"],
-[data-testid="stLogoSpacer"],
 .stDeployButton {{
     display: none !important;
 }}
-
-/* Make the header itself invisible — transparent bg, no border, no shadow.
-   It stays in the DOM at 0 height (position:absolute, so no layout impact). */
 header[data-testid="stHeader"] {{
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }}
 
 /* Collapse button (inside expanded sidebar) — Streamlit sets visibility:hidden by default */
@@ -101,9 +97,11 @@ header[data-testid="stHeader"] {{
     font-size: 1.1rem !important;
 }}
 
-/* Expand button — shown when sidebar is collapsed.
-   Lives inside the absolute-positioned header; positioned to sit at the left edge. */
+/* Expand button — visible when sidebar is collapsed.
+   Override the header's opacity:0 and position it as a fixed tab at the left edge. */
 [data-testid="stExpandSidebarButton"] {{
+    opacity: 1 !important;
+    pointer-events: all !important;
     position: fixed !important;
     left: 0 !important;
     top: 50vh !important;
@@ -118,15 +116,11 @@ header[data-testid="stHeader"] {{
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    cursor: pointer !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    pointer-events: all !important;
 }}
 [data-testid="stExpandSidebarButton"] [data-testid="stIconMaterial"] {{
     color: {TEXT_MUT} !important;
     font-size: 1rem !important;
-    visibility: visible !important;
+    opacity: 1 !important;
 }}
 
 .block-container {{
