@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
+import TopNav from './components/layout/TopNav'
 import Layout from './components/layout/Layout'
 import LivePriceTicker from './components/realtime/LivePriceTicker'
+import NewsPage from './pages/NewsPage'
 import { useDates } from './hooks/useDashboard'
 import { useTickers } from './hooks/useTickers'
 
@@ -8,6 +10,7 @@ export default function App() {
   const { data: tickers = [] } = useTickers()
   const [ticker, setTicker] = useState(null)
   const [date, setDate] = useState(null)
+  const [page, setPage] = useState('dashboard')
 
   const { data: dates = [] } = useDates(ticker)
 
@@ -31,14 +34,19 @@ export default function App() {
   return (
     <div className="app-wrapper">
       <LivePriceTicker />
-      <Layout
-        ticker={ticker}
-        date={date}
-        tickers={tickers}
-        dates={dates}
-        onTickerChange={handleTickerChange}
-        onDateChange={setDate}
-      />
+      <TopNav page={page} onNavigate={setPage} />
+      {page === 'dashboard' ? (
+        <Layout
+          ticker={ticker}
+          date={date}
+          tickers={tickers}
+          dates={dates}
+          onTickerChange={handleTickerChange}
+          onDateChange={setDate}
+        />
+      ) : (
+        <NewsPage />
+      )}
     </div>
   )
 }
