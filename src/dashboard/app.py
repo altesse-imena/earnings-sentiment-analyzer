@@ -13,7 +13,6 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-import streamlit.components.v1 as components
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 
@@ -443,14 +442,12 @@ with st.sidebar:
     else:
         st.html(f'<p style="font-size:0.78rem;color:{TEXT_DIM};">Run train.py to populate.</p>')
 
-# ── Sidebar expand button (injected into parent DOM via JS) ───────────────────
-# CSS cannot reach stExpandSidebarButton inside display:none header.
-# This component runs in a same-origin iframe; window.parent.document is accessible.
-components.html(f"""
+# ── Sidebar expand button (injected via st.html script tag) ───────────────────
+st.html(f"""
 <script>
 (function() {{
-    try {{
-        var d = window.parent.document;
+    function init() {{
+        var d = document;
         var old = d.getElementById('st-expand-tab');
         if (old) old.remove();
 
@@ -459,25 +456,16 @@ components.html(f"""
         btn.title = 'Expand sidebar';
         btn.innerHTML = '&#8250;';
         Object.assign(btn.style, {{
-            position:     'fixed',
-            left:         '0',
-            top:          '50vh',
-            transform:    'translateY(-50%)',
-            width:        '1.5rem',
-            height:       '3rem',
-            background:   '{SURFACE}',
-            border:       '1px solid {BORDER}',
-            borderLeft:   'none',
-            borderRadius: '0 6px 6px 0',
-            zIndex:       '99999',
-            cursor:       'pointer',
-            display:      'none',
-            alignItems:   'center',
-            justifyContent: 'center',
-            color:        '{TEXT_MUT}',
-            fontSize:     '1.2rem',
-            fontFamily:   'Inter, sans-serif',
-            lineHeight:   '1',
+            position:'fixed', left:'0', top:'50vh',
+            transform:'translateY(-50%)',
+            width:'1.5rem', height:'3rem',
+            background:'{SURFACE}',
+            border:'1px solid {BORDER}',
+            borderLeft:'none', borderRadius:'0 6px 6px 0',
+            zIndex:'99999', cursor:'pointer', display:'none',
+            alignItems:'center', justifyContent:'center',
+            color:'{TEXT_MUT}', fontSize:'1.2rem',
+            fontFamily:'Inter,sans-serif', lineHeight:'1'
         }});
 
         btn.addEventListener('click', function() {{
@@ -490,15 +478,20 @@ components.html(f"""
         function sync() {{
             var sb = d.querySelector('[data-testid="stSidebar"]');
             if (!sb) return;
-            var collapsed = sb.getBoundingClientRect().left < -50;
-            btn.style.display = collapsed ? 'flex' : 'none';
+            btn.style.display = sb.getBoundingClientRect().left < -50 ? 'flex' : 'none';
         }}
-        setInterval(sync, 250);
+        setInterval(sync, 300);
         sync();
-    }} catch(e) {{}}
+    }}
+
+    if (document.readyState === 'loading') {{
+        document.addEventListener('DOMContentLoaded', init);
+    }} else {{
+        init();
+    }}
 }})();
 </script>
-""", height=0)
+""")
 
 # ── Header ─────────────────────────────────────────────────────────────────────
 
