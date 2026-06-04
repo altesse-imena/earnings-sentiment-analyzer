@@ -3,7 +3,7 @@ import { BarChart2, Newspaper } from 'lucide-react'
 export default function TopNav({ page, onNavigate }) {
   return (
     <nav className="top-nav">
-      <span className="nav-brand">Earnings Intelligence</span>
+      <span className="nav-brand">Market Sentiment Analysis Assistant</span>
       <button
         className={`nav-tab ${page === 'dashboard' ? 'active' : ''}`}
         onClick={() => onNavigate('dashboard')}
