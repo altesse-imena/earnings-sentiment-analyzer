@@ -602,17 +602,26 @@ html, body, #root {
     padding: 1rem;
   }
 
-  /* Nav: allow wrapping */
+  /* Nav: show hamburger, hide desktop tabs */
   .top-nav {
     padding: 0 1rem;
-    overflow-x: auto;
-    gap: 0;
+  }
+
+  .nav-tabs-desktop {
+    display: none;
+  }
+
+  .nav-hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .nav-brand {
     font-size: 0.8rem;
-    margin-right: 1rem;
+    margin-right: 0;
     white-space: nowrap;
+    flex: 1;
   }
 
   /* Live ticker: scrollable */
@@ -662,17 +671,8 @@ html, body, #root {
     flex-direction: column;
   }
 
-  .top-nav {
-    height: auto;
-    padding: 0.5rem 1rem;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-  }
-
   .nav-brand {
-    width: 100%;
-    padding: 0.25rem 0;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
   }
 }
 
@@ -686,6 +686,66 @@ html, body, #root {
   gap: 0;
   height: 48px;
   flex-shrink: 0;
+  position: relative;
+  z-index: 100;
+}
+
+.nav-tabs-desktop {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.nav-hamburger {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  margin-left: auto;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s;
+}
+
+.nav-hamburger:hover { color: var(--text-primary); }
+
+.nav-mobile-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.nav-mobile-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1.5rem;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-mobile-item:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.nav-mobile-item.active {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 .nav-brand {
