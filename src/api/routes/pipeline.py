@@ -6,9 +6,6 @@ import pandas as pd
 from fastapi import APIRouter, BackgroundTasks, Request
 from pydantic import BaseModel
 
-from src.ingestion.edgar_fetcher import run_ingestion
-from src.modeling.train import run_training
-from src.processing.sentiment_pipeline import run_pipeline
 
 PROCESSED_DIR = Path("data/processed")
 MODEL_PATH = PROCESSED_DIR / "model/lgbm_sentiment.pkl"
@@ -25,6 +22,7 @@ class IngestRequest(BaseModel):
 
 
 def _train_and_refresh(app):
+    from src.modeling.train import run_training
     run_training()
     if MODEL_PATH.exists():
         app.state.model = joblib.load(MODEL_PATH)
@@ -41,14 +39,20 @@ def _train_and_refresh(app):
 
 
 def _process_and_refresh(app):
+    from src.processing.sentiment_pipeline import run_pipeline
     run_pipeline()
     if FEATURES_PATH.exists():
         app.state.df_features = pd.read_csv(FEATURES_PATH)
 
 
+def _run_ingestion(tickers, years):
+    from src.ingestion.edgar_fetcher import run_ingestion
+    run_ingestion(tickers, years)
+
+
 @router.post("/pipeline/ingest")
 def trigger_ingest(body: IngestRequest, background_tasks: BackgroundTasks):
-    background_tasks.add_task(run_ingestion, body.tickers, body.years)
+    background_tasks.add_task(_run_ingestion, body.tickers, body.years)
     return {"status": "started", "message": "Ingestion running in background", "tickers": body.tickers, "years": body.years}
 
 
