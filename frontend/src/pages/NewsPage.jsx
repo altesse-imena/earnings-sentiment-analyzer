@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useNews } from '../hooks/useNews'
 import { useTickers } from '../hooks/useTickers'
 import Badge from '../components/shared/Badge'
+import InvestmentRecommendation from '../components/realtime/InvestmentRecommendation'
 
 function sentimentColor(s) {
   if (!s) return 'var(--text-muted)'
@@ -157,77 +158,81 @@ export default function NewsPage() {
 
   return (
     <div className="news-page">
-      <div className="news-page-inner">
-        <div className="news-page-header">
-          <div className="news-page-title">News Intelligence</div>
-          <div className="news-page-sub">
-            Live news feed analyzed by Claude — sentiment scored per article with an aggregate directional signal
-          </div>
+      <div className="news-page-header" style={{ maxWidth: '1200px', margin: '0 auto 1.25rem' }}>
+        <div className="news-page-title">News Intelligence</div>
+        <div className="news-page-sub">
+          Live news feed analyzed by Claude — sentiment scored per article with an aggregate directional signal
         </div>
+      </div>
 
-        <div className="ticker-pills">
-          {tickers.map((t) => (
-            <button
-              key={t}
-              className={`ticker-pill ${ticker === t ? 'active' : ''}`}
-              onClick={() => setActiveTicker(t)}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
+      <div className="ticker-pills" style={{ maxWidth: '1200px', margin: '0 auto 1.25rem' }}>
+        {tickers.map((t) => (
+          <button
+            key={t}
+            className={`ticker-pill ${ticker === t ? 'active' : ''}`}
+            onClick={() => setActiveTicker(t)}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
 
-        {isLoading && (
-          <div className="news-loading">
-            <div className="loader" />
-            Analyzing news with Claude...
-          </div>
-        )}
-
-        {isError && (
-          <div className="news-error">
-            News unavailable — check that <strong>FINNHUB_API_KEY</strong> and{' '}
-            <strong>ANTHROPIC_API_KEY</strong> are set in <code>.env</code> and restart the backend.
-          </div>
-        )}
-
-        {!isLoading && !isError && data && (
-          <>
-            <AiSignalCard data={data} />
-
-            {data.articles.length > 0 && (
-              <SentimentDistribution articles={data.articles} />
-            )}
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-              <span className="section-label" style={{ margin: 0 }}>
-                {data.articles.length} article{data.articles.length !== 1 ? 's' : ''} · last 7 days
-              </span>
-              <button
-                className="icon-btn"
-                onClick={() => refetch()}
-                disabled={isFetching}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}
-              >
-                <RefreshCw
-                  size={13}
-                  style={{ animation: isFetching ? 'spin 0.7s linear infinite' : 'none' }}
-                />
-                Refresh
-              </button>
+      <div className="news-page-columns" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <div>
+          {isLoading && (
+            <div className="news-loading">
+              <div className="loader" />
+              Analyzing news with Claude...
             </div>
+          )}
 
-            {data.articles.length === 0 ? (
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', padding: '1rem 0' }}>
-                No recent articles found for {ticker}.
+          {isError && (
+            <div className="news-error">
+              News unavailable — check that <strong>FINNHUB_API_KEY</strong> and{' '}
+              <strong>ANTHROPIC_API_KEY</strong> are set in <code>.env</code> and restart the backend.
+            </div>
+          )}
+
+          {!isLoading && !isError && data && (
+            <>
+              <AiSignalCard data={data} />
+
+              {data.articles.length > 0 && (
+                <SentimentDistribution articles={data.articles} />
+              )}
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                <span className="section-label" style={{ margin: 0 }}>
+                  {data.articles.length} article{data.articles.length !== 1 ? 's' : ''} · last 7 days
+                </span>
+                <button
+                  className="icon-btn"
+                  onClick={() => refetch()}
+                  disabled={isFetching}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}
+                >
+                  <RefreshCw
+                    size={13}
+                    style={{ animation: isFetching ? 'spin 0.7s linear infinite' : 'none' }}
+                  />
+                  Refresh
+                </button>
               </div>
-            ) : (
-              data.articles.map((article, i) => (
-                <ArticleCard key={i} article={article} />
-              ))
-            )}
-          </>
-        )}
+
+              {data.articles.length === 0 ? (
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', padding: '1rem 0' }}>
+                  No recent articles found for {ticker}.
+                </div>
+              ) : (
+                data.articles.map((article, i) => (
+                  <ArticleCard key={i} article={article} />
+                ))
+              )}
+            </>
+          )}
+        </div>
+
+        <InvestmentRecommendation ticker={ticker} />
       </div>
     </div>
   )

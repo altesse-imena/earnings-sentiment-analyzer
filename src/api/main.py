@@ -17,6 +17,7 @@ from src.api.routes import (
     prediction,
     prices,
     realtime,
+    recommendation,
     sentiment,
     shap,
     tickers,
@@ -76,6 +77,7 @@ app.include_router(shap.router, prefix="/api")
 app.include_router(model.router, prefix="/api")
 app.include_router(pipeline.router, prefix="/api")
 app.include_router(news.router, prefix="/api")
+app.include_router(recommendation.router, prefix="/api")
 app.include_router(realtime.router)
 
 

@@ -57,6 +57,61 @@ async def annotate_article(headline: str, summary: str) -> dict:
         return {"sentiment": "neutral", "confidence": "LOW", "reasoning": "Analysis unavailable."}
 
 
+_RECOMMENDATION_SYSTEM = """You are a professional equity analyst providing actionable investment guidance.
+Given recent news headlines, article sentiment scores, and earnings call sentiment data for a stock, produce a
+concise investment recommendation. Return ONLY a JSON object with exactly this structure and no other text:
+{
+  "action": "BUY CALLS" | "BUY PUTS" | "ACCUMULATE" | "HOLD" | "REDUCE" | "AVOID",
+  "conviction": "HIGH" | "MEDIUM" | "LOW",
+  "timeframe": "<e.g. 1–2 weeks, 1–3 months>",
+  "rationale": "<2–3 sentences explaining the recommendation>",
+  "risk_factors": ["<risk 1>", "<risk 2>", "<risk 3>"],
+  "key_catalysts": ["<catalyst 1>", "<catalyst 2>"],
+  "disclaimer": "This is AI-generated analysis for informational purposes only and does not constitute financial advice."
+}"""
+
+
+async def investment_recommendation(
+    ticker: str,
+    articles: list[dict],
+    aggregate_signal: str,
+    aggregate_confidence: str,
+    sentiment_row: dict | None,
+) -> dict:
+    headlines = "\n".join(
+        f"- [{a.get('llm_sentiment','?')}] {a.get('headline','')}" for a in articles[:5]
+    )
+    sentiment_summary = ""
+    if sentiment_row:
+        sentiment_summary = (
+            f"\nEarnings call sentiment (most recent): "
+            f"overall={sentiment_row.get('overall_sentiment', 'n/a')}, "
+            f"ceo={sentiment_row.get('ceo_sentiment', 'n/a')}, "
+            f"tone_shift={sentiment_row.get('tone_shift', 'n/a')}"
+        )
+
+    user = (
+        f"Ticker: {ticker}\n"
+        f"Aggregate news signal: {aggregate_signal} (confidence: {aggregate_confidence})\n"
+        f"Recent headlines:\n{headlines}"
+        f"{sentiment_summary}"
+    )
+    fallback = {
+        "action": "HOLD",
+        "conviction": "LOW",
+        "timeframe": "unclear",
+        "rationale": "Insufficient data to generate a recommendation.",
+        "risk_factors": [],
+        "key_catalysts": [],
+        "disclaimer": "This is AI-generated analysis for informational purposes only and does not constitute financial advice.",
+    }
+    try:
+        raw = await asyncio.to_thread(_call_claude, _RECOMMENDATION_SYSTEM, user)
+        return _safe_parse(raw, fallback)
+    except Exception:
+        return fallback
+
+
 async def aggregate_articles(articles: list[dict]) -> dict:
     lines = "\n".join(
         f"- {a.get('headline', '')} | {a.get('summary', '')[:200]}" for a in articles[:5]
