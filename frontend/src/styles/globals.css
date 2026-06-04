@@ -544,6 +544,138 @@ html, body, #root {
 .mb-1 { margin-bottom: 1rem; }
 .mt-1 { margin-top: 1rem; }
 
+/* ── Responsive ───────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Sidebar collapses into a top strip */
+  .layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 1rem;
+    gap: 0.75rem;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar > div {
+    flex: 1 1 140px;
+    min-width: 0;
+  }
+
+  .sidebar-metric-row {
+    padding: 0.2rem 0;
+  }
+
+  /* Main content full width */
+  .layout-main {
+    padding: 1rem;
+  }
+
+  /* Stat cards: 2 columns on mobile */
+  .stat-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Charts: stack vertically */
+  .chart-row,
+  .chart-row-60-40 {
+    grid-template-columns: 1fr;
+  }
+
+  /* News page: single column */
+  .news-page-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .rec-panel {
+    position: static;
+  }
+
+  .news-page {
+    padding: 1rem;
+  }
+
+  /* Nav: allow wrapping */
+  .top-nav {
+    padding: 0 1rem;
+    overflow-x: auto;
+    gap: 0;
+  }
+
+  .nav-brand {
+    font-size: 0.8rem;
+    margin-right: 1rem;
+    white-space: nowrap;
+  }
+
+  /* Live ticker: scrollable */
+  .live-ticker-bar {
+    padding: 0.5rem 1rem;
+    gap: 1.25rem;
+  }
+
+  /* AI signal direction */
+  .ai-signal-direction,
+  .rec-action,
+  .prediction-direction {
+    font-size: 1.75rem;
+  }
+
+  /* News page header */
+  .news-page-title {
+    font-size: 1.35rem;
+  }
+
+  /* Article cards: tighter padding */
+  .article-card {
+    padding: 0.85rem 1rem;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .article-card-right {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* Header pills wrap */
+  .header-pills {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Single column stat cards on very small screens */
+  .stat-cards-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sidebar {
+    flex-direction: column;
+  }
+
+  .top-nav {
+    height: auto;
+    padding: 0.5rem 1rem;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .nav-brand {
+    width: 100%;
+    padding: 0.25rem 0;
+    font-size: 0.8rem;
+  }
+}
+
 /* ── Top nav ──────────────────────────────────────── */
 .top-nav {
   background: var(--bg-surface);
