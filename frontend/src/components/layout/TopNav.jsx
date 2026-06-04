@@ -16,7 +16,7 @@ export default function TopNav({ page, onNavigate }) {
         onClick={() => onNavigate('news')}
       >
         <Newspaper size={14} />
-        News Intelligence
+        Newsfeed Prediction
       </button>
     </nav>
   )

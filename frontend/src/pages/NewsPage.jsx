@@ -159,7 +159,7 @@ export default function NewsPage() {
   return (
     <div className="news-page">
       <div className="news-page-header" style={{ maxWidth: '1200px', margin: '0 auto 1.25rem' }}>
-        <div className="news-page-title">News Intelligence</div>
+        <div className="news-page-title">Newsfeed Prediction</div>
         <div className="news-page-sub">
           Live news feed analyzed by Claude — sentiment scored per article with an aggregate directional signal
         </div>
