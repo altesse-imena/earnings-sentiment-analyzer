@@ -33,8 +33,8 @@ export default function App() {
 
   return (
     <div className="app-wrapper">
-      <LivePriceTicker />
       <TopNav page={page} onNavigate={setPage} />
+      <LivePriceTicker />
       {page === 'dashboard' ? (
         <Layout
           ticker={ticker}
