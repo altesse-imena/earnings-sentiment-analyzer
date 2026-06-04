@@ -1,7 +1,6 @@
 import { ExternalLink, RefreshCw, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { useNews } from '../hooks/useNews'
-import { useTickers } from '../hooks/useTickers'
 import Badge from '../components/shared/Badge'
 import InvestmentRecommendation from '../components/realtime/InvestmentRecommendation'
 
@@ -149,11 +148,12 @@ function ArticleCard({ article }) {
   )
 }
 
-export default function NewsPage() {
-  const { data: tickers = [] } = useTickers()
-  const [activeTicker, setActiveTicker] = useState(null)
+const NEWS_TICKERS = ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN']
 
-  const ticker = activeTicker || tickers[0] || null
+export default function NewsPage() {
+  const [activeTicker, setActiveTicker] = useState(NEWS_TICKERS[0])
+
+  const ticker = activeTicker
   const { data, isLoading, isError, refetch, isFetching } = useNews(ticker)
 
   return (
@@ -166,7 +166,7 @@ export default function NewsPage() {
       </div>
 
       <div className="ticker-pills" style={{ maxWidth: '1200px', margin: '0 auto 1.25rem' }}>
-        {tickers.map((t) => (
+        {NEWS_TICKERS.map((t) => (
           <button
             key={t}
             className={`ticker-pill ${ticker === t ? 'active' : ''}`}
