@@ -544,6 +544,28 @@ html, body, #root {
 .mb-1 { margin-bottom: 1rem; }
 .mt-1 { margin-top: 1rem; }
 
+/* nav-tabs-desktop and nav-hamburger base states must sit BEFORE the
+   responsive block so media-query overrides take precedence */
+.nav-tabs-desktop {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.nav-hamburger {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  margin-left: auto;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s;
+}
+
+.nav-hamburger:hover { color: var(--text-primary); }
+
 /* ── Responsive ───────────────────────────────────── */
 @media (max-width: 768px) {
   /* Sidebar collapses into a top strip */
@@ -689,26 +711,6 @@ html, body, #root {
   position: relative;
   z-index: 100;
 }
-
-.nav-tabs-desktop {
-  display: flex;
-  align-items: center;
-  height: 100%;
-}
-
-.nav-hamburger {
-  display: none;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 0.25rem;
-  margin-left: auto;
-  border-radius: var(--radius-sm);
-  transition: color 0.15s;
-}
-
-.nav-hamburger:hover { color: var(--text-primary); }
 
 .nav-mobile-menu {
   position: absolute;
